@@ -1,11 +1,13 @@
 package io.namoosori.travelclub.spring;
 
+import io.namoosori.travelclub.spring.aggregate.club.TravelClub;
 import io.namoosori.travelclub.spring.service.ClubService;
 import io.namoosori.travelclub.spring.service.sdo.TravelClubCdo;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Arrays;
+import java.util.Date;
 
 public class TravelClubApp {
 
@@ -19,7 +21,11 @@ public class TravelClubApp {
         ClubService clubService = context.getBean(ClubService.class);
 
         String clubId = clubService.registerClub(clubCdo);
-        System.out.println("Id : " + clubId);
+
+        TravelClub foundedClub = clubService.findClubById(clubId);
+        System.out.println("Club Name : " + foundedClub.getName());
+        System.out.println("Club intro : " + foundedClub.getIntro());
+        System.out.println("Club foundationTime : " + new Date(foundedClub.getFoundationTime()));
 
     }
 }
