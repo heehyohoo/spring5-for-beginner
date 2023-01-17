@@ -5,6 +5,9 @@ import io.namoosori.travelclub.spring.service.MemberService;
 import io.namoosori.travelclub.spring.service.sdo.MemberCdo;
 import io.namoosori.travelclub.spring.shared.NameValueList;
 import io.namoosori.travelclub.spring.store.MemberStore;
+import io.namoosori.travelclub.spring.util.exception.MemberDuplicationException;
+import io.namoosori.travelclub.spring.util.exception.NoSuchClubException;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,35 +17,58 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MemberServiceLogic implements MemberService {
 
+
     private final MemberStore memberStore;
+
 
     @Override
     public String registerMember(MemberCdo member) {
-        return null;
+        String email = member.getEmail();
+        CommunityMember foundedMember = memberStore.retrieveByEmail(email);
+        if(foundedMember != null) {
+            throw new MemberDuplicationException("Member already exists email : " + email);
+        }
+
+        foundedMember = new CommunityMember(
+                member.getEmail(), member.getName(), member.getPhoneNumber());
+        foundedMember.setNickName(member.getNickName());
+        foundedMember.setBirthDay(member.getBirthDay());
+        foundedMember.checkValidation();
+        memberStore.create(foundedMember);
+
+        return foundedMember.getId();
     }
 
     @Override
     public CommunityMember findMemberById(String memberId) {
-        return null;
+        return memberStore.retrieve(memberId);
     }
 
     @Override
     public CommunityMember findMemberByEmail(String memberEmail) {
-        return null;
+        return memberStore.retrieve(memberEmail);
     }
 
     @Override
     public List<CommunityMember> findMembersByName(String name) {
-        return null;
+        return memberStore.retrieveByName(name);
     }
 
     @Override
-    public void modifyMember(String memberId, NameValueList member) {
-
+    public void modifyMember(String memberId, NameValueList nameValueList) {
+        CommunityMember targetMember = memberStore.retrieve(memberId);
+        if(targetMember != null) {
+            throw new NoSuchClubException("No such member with id: " + memberId);
+        }
+        targetMember.modifyValues(nameValueList);
+        memberStore.update(targetMember);
     }
 
     @Override
     public void removeMember(String memberId) {
-
+        if(!memberStore.exists(memberId)) {
+            throw new NoSuchClubException("No such member with id: " + memberId);
+        }
+        memberStore.delete(memberId);
     }
 }
